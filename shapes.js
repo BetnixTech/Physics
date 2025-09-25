@@ -1,27 +1,22 @@
 // shapes.js
-
-// Array to hold all shapes in the simulation
 export const shapes = [];
 
-// Main Shape class
 export class Shape {
     constructor(x, y, type = "circle", size = 50, color = "white", mass = 1) {
-        this.x = x;               // X position
-        this.y = y;               // Y position
-        this.type = type;         // "circle", "square", "triangle", "polygon", "line"
-        this.size = size;         // Width/height or radius
-        this.color = color;       // Fill color
-        this.mass = mass;         // Mass for physics calculations
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.size = size;
+        this.color = color;
+        this.mass = mass;
 
-        // Physics properties
-        this.vx = 0;              // Horizontal velocity
-        this.vy = 0;              // Vertical velocity
-        this.rotation = 0;        // Rotation in radians
-        this.angularVelocity = 0; // Rotation speed
-        this.anchored = false;    // If true, shape does not move
+        this.vx = 0;
+        this.vy = 0;
+        this.rotation = 0;
+        this.angularVelocity = 0;
+        this.anchored = false;
     }
 
-    // Draw the shape on the canvas context
     draw(ctx) {
         ctx.save();
         ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
@@ -54,7 +49,7 @@ export class Shape {
                 break;
 
             case "polygon":
-                const sides = 5; // default pentagon
+                const sides = 5;
                 ctx.beginPath();
                 for (let i = 0; i < sides; i++) {
                     const angle = (i / sides) * 2 * Math.PI;
@@ -81,7 +76,6 @@ export class Shape {
         ctx.restore();
     }
 
-    // Update position and apply gravity
     update(gravity, canvas) {
         if (this.anchored) return;
 
@@ -92,7 +86,7 @@ export class Shape {
         // Ground collision
         if (this.y + this.size > canvas.height) {
             this.y = canvas.height - this.size;
-            this.vy *= -0.7; // bounce
+            this.vy *= -0.7;
         }
 
         // Wall collision
@@ -104,7 +98,7 @@ export class Shape {
     }
 }
 
-// Factory functions to create shapes
+// Factory functions
 export function createCircle(x, y, size = 50, color = "white", mass = 1) {
     const c = new Shape(x, y, "circle", size, color, mass);
     shapes.push(c);
