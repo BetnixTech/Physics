@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Interactive Physics - 1990s Layout</title>
+<style>
+body {
+    background-color: #c0c0c0;
+    font-family: "Times New Roman", serif;
+    color: black;
+    margin: 0;
+}
+h1 {
+    font-size: 20pt;
+    margin: 4px;
+    text-align: center;
+}
+.toolbar {
+    background-color: #e0e0e0;
+    border-bottom: 2px solid #808080;
+    padding: 4px;
+}
+.toolbar button, .toolbar input[type="range"] {
+    font-family: "Courier New", monospace;
+    font-size: 10pt;
+    margin: 2px;
+    padding: 2px 6px;
+    border: 2px outset #808080;
+    cursor: pointer;
+}
+.container {
+    display: flex;
+    flex-direction: row;
+}
+.panel {
+    width: 200px;
+    background-color: #d0d0d0;
+    border-right: 2px solid #808080;
+    padding: 4px;
+}
+.panel h2 {
+    font-size: 14pt;
+    text-align: center;
+}
+.panel ul {
+    list-style: none;
+    padding-left: 4px;
+    font-size: 10pt;
+}
+.workspace {
+    flex-grow: 1;
+    padding: 4px;
+}
+canvas {
+    border: 1px solid black;
+    background-color: white;
+}
+</style>
+</head>
+<body>
+
+<h1>Interactive Physics - Retro IDE Layout</h1>
+
+<div class="toolbar">
+<button id="addCircle">Add Circle</button>
+<button id="addSquare">Add Square</button>
+<button id="addTriangle">Add Triangle</button>
+<button id="anchor">Anchor/Unanchor</button>
+<button id="copy">Copy Shape</button>
+<button id="delete">Delete Shape</button>
+<button id="reset">Reset</button>
+<button id="spring">Connect Spring</button>
+Gravity: <input type="range" id="gravity" min="0" max="2" step="0.01" value="0.5">
+Wind: <input type="range" id="wind" min="-1" max="1" step="0.01" value="0">
+</div>
+
+<div class="container">
+    <div class="panel">
+        <h2>Shapes</h2>
+        <ul id="shapeList">
+            <!-- Shape list populated dynamically -->
+        </ul>
+    </div>
+    <div class="workspace">
+        <canvas id="simCanvas" width="800" height="600"></canvas>
+    </div>
+</div>
+
+<script type="module">
+import { shapes, createCircle, createSquare, createTriangle } from './shapes.js';
+import { resetSimulation } from './reset.js';
+import { PhysicsEngine, startPhysics } from './physics.js';
+import { anchorShapeAt, copyShape, deleteShape } from './effects.js';
+
+const canvas = document.getElementById("simCanvas");
+const ctx = canvas.getContext("2d");
+const engine = new PhysicsEngine();
+startPhysics(engine, ctx, canvas);
+
+const shapeList = document.getElementById("shapeList");
+
+// Update the left panel list
+function updateShapeList() {
+    shapeList.innerHTML = "";
+    shapes.forEach((s, idx) => {
+        const li = document.createElement("li");
+        li.textContent = `${idx+1}: ${s.type} (${Math.round(s.x)},${Math.round(s.y)})`;
+        shapeList.appendChild(li);
+    });
+}
+
+// Grid lines and shape draw (retro style)
+function drawGrid() {
+    ctx.strokeStyle = "#e0e0e0";
+    ctx.lineWidth = 1;
+    for(let x=0;x<canvas.width;x+=50){
+        ctx.beginPath();
+        ctx.moveTo(x,0);
+        ctx.lineTo(x,canvas.height);
+        ctx.stroke();
+    }
+    for(let y=0;y<canvas.height;y+=50){
+        ctx.beginPath();
+        ctx.moveTo(0,y);
+        ctx.lineTo(canvas.width,y);
+        ctx.stroke();
+    }
+}
+
+function drawShapes() {
+    for(let shape of shapes){
+        shape.draw(ctx);
+        // Rotation indicator
+        ctx.beginPath();
+        ctx.moveTo(shape.x+shape.size/2, shape.y+shape.size/2);
+        ctx.lineTo(
+            shape.x+shape.size/2 + shape.size/2*Math.cos(shape.rotation),
+            shape.y+shape.size/2 + shape.size/2*Math.sin(shape.rotation)
+        );
+        ctx.strokeStyle="red";
+        ctx.lineWidth=2;
+        ctx.stroke();
+        // Velocity vector
+        ctx.beginPath();
+        ctx.moveTo(shape.x+shape.size/2, shape.y+shape.size/2);
+        ctx.lineTo(
+            shape.x+shape.size/2 + shape.vx*10,
+            shape.y+shape.size/2 + shape.vy*10
+        );
+        ctx.strokeStyle="blue";
+        ctx.lineWidth=1;
+        ctx.stroke();
+    }
+}
+
+// Physics loop
+function loop() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawGrid();
+    engine.step(canvas);
+    drawShapes();
+    updateShapeList();
+    requestAnimationFrame(loop);
+}
+loop();
+
+// Dragging
+let draggingShape=null, offsetX=0, offsetY=0;
+canvas.onmousedown = e => {
+  for(let i=shapes.length-1;i>=0;i--){
+    const s=shapes[i];
+    if(e.offsetX>s.x && e.offsetX<s.x+s.size && e.offsetY>s.y && e.offsetY<s.y+s.size){
+      draggingShape=s; offsetX=e.offsetX-s.x; offsetY=e.offsetY-s.y; break;
+    }
+  }
+};
+canvas.onmousemove = e => { if(draggingShape){ draggingShape.x=e.offsetX-offsetX; draggingShape.y=e.offsetY-offsetY; draggingShape.vx=0; draggingShape.vy=0; } };
+canvas.onmouseup = e => { draggingShape=null; };
+
+// Buttons
+document.getElementById("addCircle").onclick = ()=>{ createCircle(Math.random()*700+50,Math.random()*500+50,50,"cyan"); };
+document.getElementById("addSquare").onclick = ()=>{ createSquare(Math.random()*700+50,Math.random()*500+50,50,"orange"); };
+document.getElementById("addTriangle").onclick = ()=>{ createTriangle(Math.random()*700+50,Math.random()*500+50,50,"lime"); };
+document.getElementById("anchor").onclick = ()=>{ canvas.onclick=e=>{ anchorShapeAt(e.offsetX,e.offsetY); canvas.onclick=null; }; };
+document.getElementById("copy").onclick = ()=>{ if(shapes.length>0) copyShape(shapes[shapes.length-1]); };
+document.getElementById("delete").onclick = ()=>{ if(shapes.length>0) deleteShape(shapes[shapes.length-1]); };
+document.getElementById("reset").onclick = ()=>resetSimulation(ctx,canvas);
+
+// Sliders
+document.getElementById("gravity").oninput = e => engine.gravity=parseFloat(e.target.value);
+document.getElementById("wind").oninput = e => engine.wind=parseFloat(e.target.value);
+
+// Spring connection
+let springFirst=null;
+document.getElementById("spring").onclick = ()=> {
+    canvas.onclick = e => {
+        for(let i=shapes.length-1;i>=0;i--){
+            const s=shapes[i];
+            if(e.offsetX>s.x && e.offsetX<s.x+s.size && e.offsetY>s.y && e.offsetY<s.y+s.size){
+                if(!springFirst) springFirst=s;
+                else { engine.addSpring(springFirst,s,100,0.05); springFirst=null; }
+                break;
+            }
+        }
+        canvas.onclick=null;
+    };
+};
+</script>
+
+</body>
+</html>
