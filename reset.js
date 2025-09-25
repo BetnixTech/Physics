@@ -1,7 +1,7 @@
 // reset.js
 import { shapes } from './shapes.js';
 import { clearForces, stopPhysics, startPhysics } from './physics.js';
-import { engine, canvas, ctx } from './main.js'; // assume your main file exports these
+import { engine, canvas, ctx } from './main.js';
 
 export function resetSimulation() {
     // Stop physics loop
@@ -16,6 +16,6 @@ export function resetSimulation() {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Optionally restart physics loop
+    // Restart physics loop
     startPhysics(engine, ctx, canvas);
 }
