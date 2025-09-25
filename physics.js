@@ -151,9 +151,11 @@ export function startPhysics(engine, ctx, canvas) {
 }
 
 // physics.js additions
+// physics.js additions
 
 let currentAnimationId = null;
 
+// Stop the physics animation loop
 export function stopPhysics() {
     if (currentAnimationId) {
         cancelAnimationFrame(currentAnimationId);
@@ -161,8 +163,8 @@ export function stopPhysics() {
     }
 }
 
-export function clearForces(engine) {
-    // Reset forces on all shapes
+// Clear all forces on all shapes
+export function clearForces() {
     for (let shape of shapes) {
         shape.vx = 0;
         shape.vy = 0;
@@ -170,7 +172,7 @@ export function clearForces(engine) {
     }
 }
 
-// Modified startPhysics to store the animation ID
+// Update startPhysics to save the requestAnimationFrame ID
 export function startPhysics(engine, ctx, canvas) {
     function loop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -185,4 +187,6 @@ export function startPhysics(engine, ctx, canvas) {
     }
     loop();
 }
+
+
 
