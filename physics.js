@@ -149,3 +149,40 @@ export function startPhysics(engine, ctx, canvas) {
     }
     loop();
 }
+
+// physics.js additions
+
+let currentAnimationId = null;
+
+export function stopPhysics() {
+    if (currentAnimationId) {
+        cancelAnimationFrame(currentAnimationId);
+        currentAnimationId = null;
+    }
+}
+
+export function clearForces(engine) {
+    // Reset forces on all shapes
+    for (let shape of shapes) {
+        shape.vx = 0;
+        shape.vy = 0;
+        shape.angularVelocity = 0;
+    }
+}
+
+// Modified startPhysics to store the animation ID
+export function startPhysics(engine, ctx, canvas) {
+    function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        engine.step(canvas);
+
+        // Draw all shapes
+        for (let shape of shapes) {
+            shape.draw(ctx);
+        }
+
+        currentAnimationId = requestAnimationFrame(loop);
+    }
+    loop();
+}
+
